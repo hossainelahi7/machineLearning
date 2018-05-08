@@ -1,0 +1,87 @@
+Github:
+0) Existing account or new account? New account!
+1) Set up Repo (we recommend a monorepo for all projects)
+2) Protect the master branch
+3) Setup reviewer policy
+
+Slack/Comms:
+1) Setup gmail group account
+
+2) Setup GitHub channel for pull requests
+
+3) Setup alerts channel
+
+4) Install GitHub integration in Github channel
+/github subscribe <owner>/<repo>
+
+AWS:
+1) Setup user accounts
+Only create accounts for users that need AWS access. Don't use the Root User Access Keys: every account needs a root user and this user should never be used in day-to-day development. Instead create Individual IAM Users: each account should represent a single entity. Only one person should have access to an account.
+
+2) Setup IAM
+All users, services, and, roles should follow the Principle of Least Privilege (PLP). In plain english, this means that any agent (whether a program, user, or module) should only be granted permissions necessary to accomplish its intended function. In AWS, privilege is expressed through AWS Identity and Access Management policies. Setup up Groups, attach policies to groups,
+and add users to groups. Use the policies in
+https://github.com/twobulls/aws_iam_policies
+
+3) Setup a password policy: xkcd: Password Strength
+
+4) Setup fortnightly Google Calendar reminder to review users access with Access Advisor.
+
+5) Enable MFA for all users.
+
+6) Enable CloudTrail.
+
+7) Deploy AWS Security bot. Use the serverless configuration. Check with Bielen or Will.
+
+Auth0:
+1) Setup Auth0 Account
+
+Sentry:
+1) Setup Sentry Account (small account should be fine)
+2) Add tech lead on project as the billing contact
+
+
+CI/CD:
+Buy a route 53 domain.
+
+Create the Github API key for drone.
+
+Go to github organisation > settings > developer settings
+Create a new OAuth App
+Fill in the details, callback url should be in the format https://{domain}/authorize, where {domain} is the domain you just registered.
+Save the github client id and github secret for later use.
+More details here: http://docs.drone.io/install-for-github/#registration
+Create an s3 bucket to store your terraform configuration in.
+
+Generate an AWS access key to provision the server. The credentials probably need access to:
+
+Update/Edit/Create/Describe route53 zones and records
+Create/Edit/Update an ec2 instances
+The AmazonEC2FullAccess + AmazonRoute53FullAccess + AmazonS3FullAccess policy have been tested and work, but we might want something more locked down.
+It probably makes sense to create a separate account with these permissions assigned, and generate the credentials from that.
+Create or use an existing ssh public private key pair. Make sure it is stored somewhere safe.
+
+ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+Make sure you add the key to your ssh chain, eg.
+
+ssh-add .ssh/id_rsa_some_value
+Create a terraform.tfvars file from the template, fill in the relevant fields.
+
+key_file should be the public part of the ssh key you generated, eg id_rsa.pub
+email will be what is notified if there is a major security issue with the Let's Encrypt certificate
+Create backend.auto.tfvars file from the template, fill in the relevant fields
+
+secret_key and access_key correspond to your AWS access key
+bucket is the s3 bucket you created.
+Our Route53 domain should have finished registering by now. Navigate to the hosted zone page. You should be able to see an entry with your new domain. We want to tell terraform to use this hosted zone, instead of generating a new one. Copy the hosted zone id.
+
+terraform init -backend-config="backend.auto.tfvars"
+terraform import aws_route53_zone.primary {hosted zone id}
+terraform apply
+Navigate to your domain
+
+
+Frontend/Backend Code
+1) Clone fe seed project (has to be deployed to us-east-1)
+2) Clone be seed project
+3) Deploy seed projects
